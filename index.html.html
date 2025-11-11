@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cafetería Morrison - Sistema de Ingresos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            /* El padding se mueve al contenedor de la app */
+        }
+
+        /* --- NUEVO: Pantalla de Login --- */
+        #login-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: none; /* <--- CAMBIO AQUÍ: Cambiado de 'flex' a 'none' */
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            transition: opacity 0.3s;
+        }
+
+        .login-card {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .login-card h2 {
+            color: #764ba2;
+            margin-bottom: 25px;
+            font-size: 1.8em;
+        }
+
+        /* Reutilizamos los estilos .form-group y .btn */
+        .login-card .form-group {
+            text-align: left;
+            margin-bottom: 15px;
+        }
+
+        .login-card .btn {
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        /* --- NUEVO: Contenedor de la App --- */
+        #app-container {
+            display: none; /* Oculto por defecto */
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .container {
+            /* Estilos movidos a #app-container */
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+            margin-bottom: 30px;
+            /* NUEVO: Flex para el botón de salir */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+            /* Ajuste para que el h1 ocupe espacio */
+            flex-basis: 100%;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .header-content {
+            text-align: center;
+            flex: 1;
+        }
+
+        /* NUEVO: Botón de Salir */
+        #btn-logout {
+            background: #f0f0f0;
+            color: #777;
+            padding: 10px 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: none;
+            border-radius: 10px;
+        }
+        
+        #btn-logout:hover {
+             background: #e0e0e0;
+             color: #333;
+        }
+
+        .input-section {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+
+        .input-section h2 {
+            color: #764ba2;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            color: #555;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+
+        .form-group input, .form-group select {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        /* Estilo para botones deshabilitados */
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn:not(:disabled):hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:not(:disabled):active {
+            transform: translateY(0);
+        }
+
+        .filters {
+            background: white;
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: end;
+        }
+
+        .filters .form-group {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .user-sections {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .user-card {
+            background: white;
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .user-card.christian {
+            border-top: 5px solid #4CAF50;
+        }
+
+        .user-card.monica {
+            border-top: 5px solid #FF6B9D;
+        }
+
+        .user-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .user-header h3 {
+            font-size: 1.8em;
+            color: #333;
+        }
+
+        .user-card.christian .user-header h3 {
+            color: #4CAF50;
+        }
+
+        .user-card.monica .user-header h3 {
+            color: #FF6B9D;
+        }
+
+        .total-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+
+        .entries-list {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+        }
+
+        .entry-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.2s;
+        }
+
+        .entry-item:hover {
+            transform: translateX(5px);
+            background: #e9ecef;
+        }
+
+        .entry-info {
+            flex: 1;
+        }
+
+        .entry-product {
+            font-weight: 600;
+            color: #333;
+            font-size: 1.1em;
+        }
+
+        .entry-date {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .entry-price {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .delete-btn {
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-left: 10px;
+            transition: background 0.2s;
+        }
+
+        .delete-btn:hover {
+            background: #ff3838;
+        }
+
+        .summary-section {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-top: 30px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .summary-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .summary-label {
+            font-size: 1em;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+
+        .summary-value {
+            font-size: 2em;
+            font-weight: 700;
+        }
+
+        .no-data {
+            text-align: center;
+            color: #999;
+            padding: 40px;
+            font-size: 1.1em;
+        }
+
+        /* --- Estilos para los Modales (Alerta y Confirmación) --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+
+        .modal-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 450px;
+            text-align: center;
+            transform: scale(0.9);
+            transition: transform 0.3s;
+        }
+
+        .modal-overlay.visible .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-content h3 {
+            color: #764ba2;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .modal-content p {
+            color: #555;
+            font-size: 1.1em;
+            margin-bottom: 25px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .modal-buttons .btn-secondary {
+            background: #f0f0f0;
+            color: #555;
+        }
+
+        .modal-buttons .btn-danger {
+            background: #ff4757;
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .user-sections {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .header {
+                justify-content: center; /* Centra en móvil */
+            }
+
+            #btn-logout {
+                margin-top: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NUEVO: Pantalla de Login -->
+    <div id="login-screen">
+        <div class="login-card">
+            <h2>☕ Iniciar Sesión</h2>
+            <div class="form-group">
+                <label for="login-email">Correo Electrónico:</label>
+                <input type="email" id="login-email" placeholder="usuario@dominio.com">
+            </div>
+            <div class="form-group">
+                <label for="login-password">Contraseña:</label>
+                <input type="password" id="login-password" placeholder="••••••••">
+            </div>
+            <button class="btn" id="btn-login">Ingresar</button>
+        </div>
+    </div>
+
+    <!-- NUEVO: Contenedor de la App (oculto por defecto) -->
+    <div id="app-container">
+        <div class="header">
+            <div class="header-content">
+                <h1>☕ Cafetería Morrison</h1>
+                <p>Sistema de Control de Ingresos</p>
+            </div>
+            <!-- NUEVO: Botón de Salir -->
+            <button id="btn-logout">Cerrar Sesión</button>
+        </div>
+
+        <div class="input-section">
+            <h2>➕ Nuevo Ingreso</h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Usuario:</label>
+                    <select id="usuario">
+                        <option value="Christian">Christian</option>
+                        <option value="Mónica">Mónica</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Producto:</label>
+                    <input type="text" id="producto" placeholder="Ej: Café Americano">
+                </div>
+                <div class="form-group">
+                    <label>Precio ($):</label>
+                    <input type="number" id="precio" step="0.01" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                    <label>Fecha:</label>
+                    <input type="date" id="fecha">
+                </div>
+            </div>
+            <!-- El botón se deshabilita hasta que Firebase esté listo -->
+            <button class="btn" id="btnAgregar" disabled>Cargando...</button>
+        </div>
+
+        <div class="filters">
+            <div class="form-group">
+                <label>Filtrar por Día:</label>
+                <input type="date" id="filtroDia">
+            </div>
+            <div class="form-group">
+                <label>Filtrar por Mes:</label>
+                <select id="filtroMes">
+                    <option value="">Todos los meses</option>
+                    <option value="01">Enero</option>
+                    <option value="02">Febrero</option>
+                    <option value="03">Marzo</option>
+                    <option value="04">Abril</option>
+                    <option value="05">Mayo</option>
+                    <option value="06">Junio</option>
+                    <option value="07">Julio</option>
+                    <option value="08">Agosto</option>
+                    <option value="09">Septiembre</option>
+                    <option value="10">Octubre</option>
+                    <option value="11">Noviembre</option>
+                    <option value="12">Diciembre</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Año:</label>
+                <select id="filtroAnio">
+                    <option value="">Todos</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <button class="btn" id="btnLimpiarFiltros">Limpiar Filtros</button>
+            </div>
+        </div>
+
+        <div class="user-sections">
+            <div class="user-card christian">
+                <div class="user-header">
+                    <h3>Christian</h3>
+                    <div class="total-badge" id="totalChristian">$0.00</div>
+                </div>
+                <div class="entries-list" id="entriesChristian"></div>
+            </div>
+
+            <div class="user-card monica">
+                <div class="user-header">
+                    <h3>Mónica</h3>
+                    <div class="total-badge" id="totalMonica">$0.00</div>
+                </div>
+                <div class="entries-list" id="entriesMonica"></div>
+            </div>
+        </div>
+
+        <div class="summary-section">
+            <h2 style="color: #764ba2; margin-bottom: 20px;">📊 Resumen General</h2>
+            <div class="summary-grid">
+                <div class="summary-card">
+                    <div class="summary-label">Total Christian</div>
+                    <div class="summary-value" id="summaryChristian">$0.00</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">Total Mónica</div>
+                    <div class="summary-value" id="summaryMonica">$0.00</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">Total General</div>
+                    <div class="summary-value" id="summaryTotal">$0.00</div>
+                </div>
+            </div>
+        </div>
+    </div> <!-- Fin de #app-container -->
+
+    <!-- Modal de Alerta (reemplaza alert()) -->
+    <div class="modal-overlay" id="alertaModal">
+        <div class="modal-content">
+            <h3>Atención</h3>
+            <p id="alertaMensaje"></p>
+            <div class="modal-buttons">
+                <button class="btn" id="alertaCerrar">Entendido</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmación (reemplaza confirm()) -->
+    <div class="modal-overlay" id="confirmarModal">
+        <div class="modal-content">
+            <h3>Confirmar Acción</h3>
+            <p>¿Estás seguro de eliminar este ingreso?</p>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" id="confirmarCancelar">Cancelar</button>
+                <button class="btn btn-danger" id="confirmarAceptar">Eliminar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Imports de Firebase -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        // NUEVO: Importar signInWithEmailAndPassword y signOut
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- Variables Globales ---
+        let ingresos = []; // Copia local de los datos de Firestore
+        let filtros = {
+            dia: '',
+            mes: '',
+            anio: ''
+        };
+
+        // Variables de Firebase
+        let db, auth;
+        let ingresosColRef; // Referencia a la colección de 'ingresos'
+        let unsubscribe; // Para detener el listener de onSnapshot
+        
+        // Variables para Modales
+        let idParaBorrar = null;
+        const alertaModal = document.getElementById('alertaModal');
+        const confirmarModal = document.getElementById('confirmarModal');
+        const btnAgregar = document.getElementById('btnAgregar');
+
+        // NUEVO: Elementos de la UI de Login y App
+        const loginScreen = document.getElementById('login-screen');
+        const appContainer = document.getElementById('app-container');
+        const btnLogin = document.getElementById('btn-login');
+
+        // --- Configuración de Firebase ---
+        // ¡Usamos la configuración que ya tenías!
+        const firebaseConfig = {
+          apiKey: "AIzaSyD9qAiprGL6efl4sqAKjCxdZk3LAgABiKo",
+          authDomain: "cafeteria-66ff9.firebaseapp.com",
+          projectId: "cafeteria-66ff9",
+          storageBucket: "cafeteria-66ff9.firebasestorage.app",
+          messagingSenderId: "750795304793",
+          appId: "1:750795304793:web:e210049c0a2131e1f86648",
+          measurementId: "G-CR3K0D0JT4"
+        };
+        
+        /**
+         * Inicializa la aplicación Firebase, y configura el observador
+         * de estado de autenticación (onAuthStateChanged).
+         */
+        function iniciarApp() {
+            try {
+                // 1. Inicializar Firebase
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                
+                // Habilitar logs de Firestore para depuración
+                setLogLevel('Debug');
+
+                // 2. OBSERVADOR DE AUTENTICACIÓN
+                // Este es el controlador principal de la UI
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        // --- Usuario SÍ está logueado ---
+                        console.log('Usuario autenticado:', user.uid);
+                        
+                        // Mostrar app, ocultar login
+                        loginScreen.style.display = 'none';
+                        appContainer.style.display = 'block';
+
+                        // 3. Definir la ruta de la base de datos
+                        const dbPath = `ingresos`;
+                        ingresosColRef = collection(db, dbPath);
+                        console.log('Escuchando en la ruta:', dbPath);
+
+                        // 4. Empezar a escuchar cambios en la BD
+                        escucharIngresos();
+                        
+                        // 5. Habilitar el botón de agregar
+                        btnAgregar.textContent = "Agregar Ingreso";
+                        btnAgregar.disabled = false;
+
+                    } else {
+                        // --- Usuario NO está logueado ---
+                        console.log('Usuario no autenticado.');
+
+                        // Mostrar login, ocultar app
+                        loginScreen.style.display = 'flex';
+                        appContainer.style.display = 'none';
+
+                        // Detener el listener de Firestore si estaba activo
+                        if (unsubscribe) {
+                            console.log('Deteniendo listener de Firestore.');
+                            unsubscribe();
+                        }
+                        
+                        // Limpiar datos de la UI
+                        ingresos = [];
+                        mostrarIngresos(); // Esto limpiará las listas y totales
+                    }
+                });
+
+                // NO iniciamos sesión anónimamente aquí.
+                // El onAuthStateChanged se disparará solo (con 'null' al inicio)
+
+            } catch (error) {
+                console.error("Error al inicializar Firebase:", error);
+                mostrarAlerta("Error de conexión. No se pueden cargar los datos.");
+                btnAgregar.textContent = "Error de conexión";
+                btnLogin.textContent = "Error de conexión";
+                btnLogin.disabled = true;
+            }
+            
+            // Configurar listeners de la UI (incluso los de login)
+            configurarListenersUI();
+            inicializarFechaActual();
+        }
+
+        /**
+         * Configura los event listeners para los botones y filtros.
+         */
+        function configurarListenersUI() {
+            // Listeners de la App
+            btnAgregar.onclick = agregarIngreso;
+            document.getElementById('filtroDia').onchange = aplicarFiltros;
+            document.getElementById('filtroMes').onchange = aplicarFiltros;
+            document.getElementById('filtroAnio').onchange = aplicarFiltros;
+            document.getElementById('btnLimpiarFiltros').onclick = limpiarFiltros;
+
+            // NUEVO: Listeners de Login/Logout
+            btnLogin.onclick = handleLogin;
+            document.getElementById('btn-logout').onclick = handleLogout;
+
+            // Listeners de Modales
+            document.getElementById('alertaCerrar').onclick = () => alertaModal.classList.remove('visible');
+            document.getElementById('confirmarCancelar').onclick = () => confirmarModal.classList.remove('visible');
+            document.getElementById('confirmarAceptar').onclick = confirmarEliminacion;
+        }
+
+        // --- NUEVAS FUNCIONES DE AUTENTICACIÓN ---
+
+        /**
+         * Intenta iniciar sesión con email y contraseña.
+         */
+        async function handleLogin() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+
+            if (!email || !password) {
+                mostrarAlerta("Por favor, ingresa correo y contraseña.");
+                return;
+            }
+
+            // Deshabilitar botón mientras carga
+            btnLogin.disabled = true;
+            btnLogin.textContent = "Ingresando...";
+
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                // Éxito. El 'onAuthStateChanged' se encargará de
+                // ocultar el login y mostrar la app.
+                console.log("Inicio de sesión exitoso.");
+
+            } catch (error) {
+                console.error("Error al iniciar sesión:", error.code, error.message);
+                // Traducir errores comunes
+                let mensajeError = "Error al iniciar sesión. Verifica tus credenciales.";
+                if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
+                    mensajeError = "Credenciales incorrectas. Verifica tu correo y contraseña.";
+                } else if (error.code === 'auth/invalid-email') {
+                    mensajeError = "El formato del correo no es válido.";
+                }
+                mostrarAlerta(mensajeError);
+            } finally {
+                // Volver a habilitar el botón
+                btnLogin.disabled = false;
+                btnLogin.textContent = "Ingresar";
+            }
+        }
+
+        /**
+         * Cierra la sesión del usuario actual.
+         */
+        async function handleLogout() {
+            try {
+                await signOut(auth);
+                // Éxito. El 'onAuthStateChanged' se encargará de
+                // mostrar el login y ocultar la app.
+                console.log("Sesión cerrada.");
+            } catch (error) {
+                console.error("Error al cerrar sesión:", error);
+                mostrarAlerta("No se pudo cerrar la sesión.");
+            }
+        }
+
+        // --- RESTO DE FUNCIONES (sin cambios) ---
+
+        /**
+         * Escucha los cambios en la colección 'ingresos' en tiempo real.
+         */
+        function escucharIngresos() {
+            if (unsubscribe) {
+                unsubscribe(); // Detiene el listener anterior si existe
+            }
+
+            const q = query(ingresosColRef);
+
+            unsubscribe = onSnapshot(q, (snapshot) => {
+                console.log("Datos recibidos de Firestore:", snapshot.size, "documentos");
+                ingresos = []; // Vacía la lista local
+                snapshot.forEach((doc) => {
+                    ingresos.push({
+                        id: doc.id,
+                        ...doc.data()
+                    });
+                });
+                
+                ingresos.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+
+                llenarAnios();
+                mostrarIngresos();
+            }, (error) => {
+                console.error("Error al escuchar ingresos:", error);
+                mostrarAlerta("Error al cargar los datos en tiempo real.");
+            });
+        }
+        
+        function inicializarFechaActual() {
+            const hoy = new Date().toISOString().split('T')[0];
+            document.getElementById('fecha').value = hoy;
+        }
+
+        function llenarAnios() {
+            const selectAnio = document.getElementById('filtroAnio');
+            const anioSeleccionado = selectAnio.value; 
+            
+            const aniosUnicos = [...new Set(ingresos.map(ing => ing.fecha.split('-')[0]))].sort().reverse();
+            
+            selectAnio.innerHTML = '<option value="">Todos</option>';
+            aniosUnicos.forEach(anio => {
+                const option = document.createElement('option');
+                option.value = anio;
+                option.textContent = anio;
+                if (anio === anioSeleccionado) {
+                    option.selected = true;
+                }
+                selectAnio.appendChild(option);
+            });
+        }
+
+        /**
+         * Agrega un nuevo documento de ingreso a Firestore.
+         */
+        async function agregarIngreso() {
+            const usuario = document.getElementById('usuario').value;
+            const producto = document.getElementById('producto').value.trim();
+            const precio = parseFloat(document.getElementById('precio').value);
+            const fecha = document.getElementById('fecha').value;
+
+            if (!producto || !precio || !fecha || isNaN(precio)) {
+                mostrarAlerta('Por favor completa todos los campos correctamente');
+                return;
+            }
+
+            const nuevoIngreso = {
+                usuario,
+                producto,
+                precio,
+                fecha
+            };
+
+            btnAgregar.disabled = true;
+            btnAgregar.textContent = "Guardando...";
+
+            try {
+                await addDoc(ingresosColRef, nuevoIngreso);
+                
+                document.getElementById('producto').value = '';
+                document.getElementById('precio').value = '';
+                
+            } catch (error) {
+                console.error("Error al agregar ingreso:", error);
+                mostrarAlerta("No se pudo guardar el ingreso. Inténtalo de nuevo.");
+            } finally {
+                btnAgregar.disabled = false;
+                btnAgregar.textContent = "Agregar Ingreso";
+            }
+        }
+
+        /**
+         * Muestra el modal de confirmación antes de eliminar.
+         * @param {string} id - El ID del documento de Firestore a eliminar.
+         */
+        function mostrarConfirmacionEliminar(id) {
+            idParaBorrar = id;
+            confirmarModal.classList.add('visible');
+        }
+
+        /**
+         * Elimina el documento de Firestore.
+         */
+        async function confirmarEliminacion() {
+            if (!idParaBorrar) return;
+
+            confirmarModal.classList.remove('visible');
+            const docRef = doc(db, ingresosColRef.path, idParaBorrar);
+
+            try {
+                await deleteDoc(docRef);
+            } catch (error) {
+                console.error("Error al eliminar ingreso:", error);
+                mostrarAlerta("No se pudo eliminar el ingreso.");
+            }
+            idParaBorrar = null;
+        }
+
+        function aplicarFiltros() {
+            filtros.dia = document.getElementById('filtroDia').value;
+            filtros.mes = document.getElementById('filtroMes').value;
+            filtros.anio = document.getElementById('filtroAnio').value;
+            mostrarIngresos();
+        }
+
+        function limpiarFiltros() {
+            document.getElementById('filtroDia').value = '';
+            document.getElementById('filtroMes').value = '';
+            document.getElementById('filtroAnio').value = '';
+            filtros = { dia: '', mes: '', anio: '' };
+            mostrarIngresos();
+        }
+
+        function filtrarIngresos(ingresosList) {
+            return ingresosList.filter(ing => {
+                if (filtros.dia && ing.fecha !== filtros.dia) return false;
+                if (filtros.mes && ing.fecha.split('-')[1] !== filtros.mes) return false;
+                if (filtros.anio && ing.fecha.split('-')[0] !== filtros.anio) return false;
+                return true;
+            });
+        }
+
+        function mostrarIngresos() {
+            const ingresosFiltrados = filtrarIngresos(ingresos);
+            
+            const ingresosChristian = ingresosFiltrados.filter(ing => ing.usuario === 'Christian');
+            const ingresosMonica = ingresosFiltrados.filter(ing => ing.usuario === 'Mónica');
+
+            mostrarIngresosUsuario('entriesChristian', ingresosChristian);
+            mostrarIngresosUsuario('entriesMonica', ingresosMonica);
+
+            actualizarTotales(ingresosChristian, ingresosMonica);
+        }
+
+        function mostrarIngresosUsuario(containerId, ingresosList) {
+            const container = document.getElementById(containerId);
+            
+            if (ingresosList.length === 0) {
+                container.innerHTML = '<div class="no-data">No hay ingresos registrados</div>';
+                return;
+            }
+
+            container.innerHTML = ingresosList.map(ing => `
+                <div class="entry-item">
+                    <div class="entry-info">
+                        <div class="entry-product">${ing.producto}</div>
+                        <div class="entry-date">${formatearFecha(ing.fecha)}</div>
+                    </div>
+                    <div class="entry-price">$${ing.precio.toFixed(2)}</div>
+                    <button class="delete-btn" data-id="${ing.id}">✕</button>
+                </div>
+            `).join('');
+
+            container.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.onclick = () => mostrarConfirmacionEliminar(btn.dataset.id);
+            });
+        }
+
+        function formatearFecha(fecha) {
+            const opciones = { year: 'numeric', month: 'long', day: 'numeric' };
+            return new Date(fecha + 'T00:00:00').toLocaleDateString('es-ES', opciones);
+        }
+
+        function actualizarTotales(ingresosChristian, ingresosMonica) {
+            const totalChristian = ingresosChristian.reduce((sum, ing) => sum + ing.precio, 0);
+            const totalMonica = ingresosMonica.reduce((sum, ing) => sum + ing.precio, 0);
+            const totalGeneral = totalChristian + totalMonica;
+
+            document.getElementById('totalChristian').textContent = `$${totalChristian.toFixed(2)}`;
+            document.getElementById('totalMonica').textContent = `$${totalMonica.toFixed(2)}`;
+            
+            document.getElementById('summaryChristian').textContent = `$${totalChristian.toFixed(2)}`;
+            document.getElementById('summaryMonica').textContent = `$${totalMonica.toFixed(2)}`;
+            document.getElementById('summaryTotal').textContent = `$${totalGeneral.toFixed(2)}`;
+        }
+
+        // --- Funciones de Modales ---
+        
+        /**
+         * Muestra el modal de alerta con un mensaje.
+         * @param {string} mensaje - El mensaje a mostrar.
+         */
+        function mostrarAlerta(mensaje) {
+            document.getElementById('alertaMensaje').textContent = mensaje;
+            alertaModal.classList.add('visible');
+        }
+
+        // --- Iniciar la aplicación ---
+        window.onload = iniciarApp;
+
+    </script>
+</body>
+</html>
